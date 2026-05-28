@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusat Notifikasi | Temu Makna</title>
+    
+    <!-- Fonts: Playfair Display (Headings) & Lora (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cream: {
+                            50: '#FFFEFC',
+                            100: '#FDFBF7',
+                            200: '#F5EFE6',
+                            300: '#E8DCC4',
+                        },
+                        wood: {
+                            400: '#A67C52',
+                            500: '#8C6239',
+                            600: '#6B4A2B',
+                            700: '#4A331D',
+                        },
+                        darkbg: {
+                            800: '#2A2A2A',
+                            900: '#1A1A1A',
+                            950: '#121212',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Lora"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FDFBF7;
+            color: #2C2A29;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .dark body {
+            background-color: #121212;
+            color: #E5E5E5;
+        }
+        
+        /* Custom scrollbar yang elegan */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #E8DCC4; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background-color: #2A2A2A; }
+
+        /* Animasi Transisi */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.4s ease, transform 0.4s ease; }
+    </style>
+</head>
+<body class="antialiased font-sans flex h-screen overflow-hidden">
+
+    <!-- Sidebar Kiri -->
+    <aside class="w-64 border-r border-cream-200 dark:border-darkbg-800 bg-cream-50 dark:bg-darkbg-950 flex flex-col flex-shrink-0 z-20">
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-8 border-b border-cream-200 dark:border-darkbg-800">
+            <a href="#" class="font-serif text-2xl font-bold tracking-wide text-wood-600 dark:text-wood-400">
+                Temu<span class="font-light italic text-gray-800 dark:text-gray-200">Makna.</span>
+            </a>
+        </div>
+
+        <!-- Menu Navigasi -->
+        <nav class="flex-1 px-4 py-8 space-y-2">
+            <!-- Menu Kotak Masuk (Aktif) -->
+            <button id="tabInbox" onclick="switchTab('inbox')" class="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-wood-50 dark:bg-wood-900/20 text-wood-600 dark:text-wood-400 font-medium transition-all group">
+                <div class="flex items-center gap-3">
+                    <i class="ph ph-tray text-xl"></i>
+                    <span>Kotak Masuk</span>
+                </div>
+                <!-- Notifikasi Badge Dinamis -->
+                <span id="inboxBadge" class="bg-wood-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+            </button>
+
+            <!-- Menu Riwayat (Static) -->
+            <button id="tabHistory" onclick="switchTab('history')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-cream-100 dark:hover:bg-darkbg-900 transition-all">
+                <i class="ph ph-clock-counter-clockwise text-xl"></i>
+                <span>Riwayat</span>
+            </button>
+        </nav>
+
+        <!-- Profile & Theme Toggle -->
+        <div class="p-4 border-t border-cream-200 dark:border-darkbg-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-wood-200 dark:bg-darkbg-800 flex items-center justify-center text-wood-700 dark:text-wood-400 font-serif font-bold">
+                    A
+                </div>
+                <div class="text-sm">
+                    <p class="font-bold text-gray-800 dark:text-gray-200">Admin</p>
+                </div>
+            </div>
+            <button id="themeToggle" class="p-2 text-gray-400 hover:text-wood-500 transition-colors focus:outline-none">
+                <i class="ph ph-moon text-xl" id="moonIcon"></i>
+                <i class="ph ph-sun text-xl hidden" id="sunIcon"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Area Utama (Daftar & Detail) -->
+    <main class="flex-1 flex overflow-hidden bg-white dark:bg-[#181818]">
+        
+        <!-- Kolom List (Pesan Masuk dari GAS) -->
+        <div class="w-[400px] border-r border-cream-200 dark:border-darkbg-800 flex flex-col flex-shrink-0 bg-cream-50/50 dark:bg-darkbg-950/50">
+            <!-- Header List -->
+            <div class="px-6 py-6 border-b border-cream-200 dark:border-darkbg-800 flex justify-between items-center">
+                <div>
+                    <h1 id="listHeaderTitle" class="text-2xl font-serif font-bold text-gray-900 dark:text-gray-100">Kotak Masuk</h1>
+                    <p id="listHeaderSubtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pesan yang belum dibaca</p>
+                </div>
+                <button onclick="loadData()" class="p-2 text-gray-400 hover:text-wood-500 transition-colors" title="Muat Ulang">
+                    <i class="ph ph-arrows-clockwise text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="inboxList">
+                <!-- Konten dinamis akan di-render di sini oleh JavaScript -->
+                <div class="p-4 text-center text-gray-500 flex flex-col items-center gap-2">
+                    <i class="ph ph-spinner-gap animate-spin text-2xl"></i>
+                    <p class="text-sm">Menghubungkan ke server...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kolom Detail (View Only) -->
+        <div class="flex-1 flex flex-col relative overflow-hidden bg-white dark:bg-[#121212]">
+            
+            <!-- State Kosong (Sebelum ada yang dipilih) -->
+            <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <div class="w-24 h-24 bg-cream-100 dark:bg-darkbg-900 rounded-full flex items-center justify-center mb-6 text-cream-300 dark:text-darkbg-700">
+                    <i class="ph ph-envelope-open text-5xl"></i>
+                </div>
+                <h3 class="text-xl font-serif text-gray-600 dark:text-gray-300">Pilih pesan untuk melihat detail</h3>
+                <p class="text-gray-400 mt-2 text-sm">Data akan dimuat langsung dari pesan masuk.</p>
+            </div>
+
+            <!-- Area Konten Detail -->
+            <div id="detailContent" class="hidden flex-col h-full fade-enter">
+                
+                <!-- Toolbar Atas -->
+                <div class="h-16 px-8 border-b border-cream-200 dark:border-darkbg-800 flex items-center justify-between flex-shrink-0">
+                    <span id="detailTypeBadge" class="px-3 py-1 bg-wood-100 dark:bg-wood-900/30 text-wood-700 dark:text-wood-400 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit">
+                        <i class="ph ph-tag"></i> Tipe
+                    </span>
+                    
+                    <!-- Action: Tandai selesai/masukkan riwayat -->
+                    <button id="btnTandaiSelesai" class="flex items-center gap-2 px-4 py-2 bg-cream-100 hover:bg-wood-100 dark:bg-darkbg-900 dark:hover:bg-darkbg-800 text-gray-600 dark:text-gray-300 rounded-lg transition-colors text-sm font-medium">
+                        <i class="ph ph-check-circle"></i> Tandai Selesai
+                    </button>
+                    <!-- Action: Hapus Permanen (untuk Riwayat) -->
+                    <button id="btnHapusPermanen" class="hidden flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg transition-colors text-sm font-medium">
+                        <i class="ph ph-trash"></i> Hapus Permanen
+                    </button>
+                </div>
+
+                <!-- Konten Scrollable -->
+                <div class="flex-1 overflow-y-auto px-8 py-10 custom-scrollbar">
+                    <div class="max-w-2xl mx-auto">
+                        
+                        <!-- Header Konten -->
+                        <div class="mb-10">
+                            <h2 id="detailTitle" class="text-3xl font-serif font-bold text-gray-900 dark:text-gray-100 mb-6 leading-tight">Judul</h2>
+                            
+                            <div class="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-darkbg-800">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-cream-200 dark:bg-darkbg-800 rounded-full flex items-center justify-center text-wood-600 dark:text-wood-400 text-xl">
+                                        <i class="ph ph-user"></i>
+                                    </div>
+                                    <div>
+                                        <p id="detailSender" class="font-bold text-gray-800 dark:text-gray-200">Nama Pengirim</p>
+                                        <p id="detailStatus" class="text-sm text-gray-500 dark:text-gray-400">Status: -</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p id="detailDate" class="text-sm font-medium text-gray-500">Tanggal</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Body Konten -->
+                        <div id="detailBody" class="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+                            <!-- JS akan mengisi konten dari Spreadsheet di sini -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <script>
+        // ==========================================
+        // KONFIGURASI API (GOOGLE APPS SCRIPT)
+        // ==========================================
+        // Ganti string di bawah dengan URL Web App dari hasil Deploy Google Apps Script Anda.
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyKf_HK_zW3S7v6I3YiMjGuYMdFR5tqMi6L9AIVv0G2PhDoBiEOIFGsc4URg4XYVJv6WA/exec';
+        
+        let currentData = [];
+        let currentActiveId = null;
+        let currentTab = 'inbox'; // 'inbox' atau 'history'
+        // --- Dark Mode Logic ---
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const moonIcon = document.getElementById('moonIcon');
+        const sunIcon = document.getElementById('sunIcon');
+
+        function updateIcons(isDark) {
+            if(isDark) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+            }
+        }
+
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+            updateIcons(true);
+        } else {
+            html.classList.remove('dark');
+            updateIcons(false);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            updateIcons(isDark);
+        });
+
+        // --- Tab Switch Logic ---
+        function switchTab(tab) {
+            currentTab = tab;
+            currentActiveId = null;
+            
+            const btnInbox = document.getElementById('tabInbox');
+            const btnHistory = document.getElementById('tabHistory');
+            
+            // Reset state
+            document.getElementById('detailContent').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+
+            if (tab === 'inbox') {
+                btnInbox.className = 'w-full flex items-center justify-between px-4 py-3 rounded-xl bg-wood-50 dark:bg-wood-900/20 text-wood-600 dark:text-wood-400 font-medium transition-all group';
+                btnHistory.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-cream-100 dark:hover:bg-darkbg-900 transition-all';
+                document.getElementById('listHeaderTitle').innerText = 'Kotak Masuk';
+                document.getElementById('listHeaderSubtitle').innerText = 'Pesan yang belum dibaca';
+                
+                document.getElementById('btnTandaiSelesai').classList.remove('hidden');
+                document.getElementById('btnHapusPermanen').classList.add('hidden');
+            } else {
+                btnHistory.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-wood-50 dark:bg-wood-900/20 text-wood-600 dark:text-wood-400 font-medium transition-all group';
+                btnInbox.className = 'w-full flex items-center justify-between px-4 py-3 rounded-xl text-gray-500 hover:bg-cream-100 dark:hover:bg-darkbg-900 transition-all group';
+                document.getElementById('listHeaderTitle').innerText = 'Riwayat';
+                document.getElementById('listHeaderSubtitle').innerText = 'Pesan yang telah dibaca';
+                
+                document.getElementById('btnTandaiSelesai').classList.add('hidden');
+                document.getElementById('btnHapusPermanen').classList.remove('hidden');
+            }
+            
+            loadData();
+        }
+
+        // --- Fetch Data API Logic ---
+        async function loadData() {
+            if (SCRIPT_URL === 'URL_WEB_APP_GAS_ANDA_DISINI') {
+                document.getElementById('inboxList').innerHTML = `
+                    <div class="p-4 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                        <p class="font-bold mb-1">SCRIPT_URL Belum Diatur!</p>
+                        <p class="text-xs">Silakan masukkan URL Web App Google Apps Script Anda pada bagian bawah kode HTML ini.</p>
+                    </div>`;
+                return;
+            }
+
+            const listContainer = document.getElementById('inboxList');
+            listContainer.innerHTML = `
+                <div class="p-4 text-center text-gray-500 flex flex-col items-center gap-2">
+                    <i class="ph ph-spinner-gap animate-spin text-2xl text-wood-500"></i>
+                    <p class="text-sm">Mencari data...</p>
+                </div>`;
+
+            try {
+                // Menentukan action berdasarkan tab yang aktif
+                const action = currentTab === 'history' ? 'fetch_history' : 'fetch_inbox';
+                const response = await fetch(`${SCRIPT_URL}?action=${action}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    currentData = result.data;
+                    renderList();
+                } else {
+                    throw new Error('Respons gagal dari server.');
+                }
+            } catch (error) {
+                console.error(error);
+                listContainer.innerHTML = `
+                    <div class="p-4 text-center text-gray-500">
+                        <i class="ph ph-warning-circle text-2xl mb-2 text-wood-500"></i>
+                        <p class="text-sm">Gagal menghubungkan. Pastikan URL sudah benar dan akses dideploy ke "Anyone".</p>
+                    </div>`;
+            }
+        }
+
+        function renderList() {
+            const listContainer = document.getElementById('inboxList');
+            listContainer.innerHTML = '';
+
+            // Update Badge hanya jika di tab inbox
+            if(currentTab === 'inbox') {
+                document.getElementById('inboxBadge').innerText = currentData.length;
+            }
+
+            if (currentData.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="p-8 text-center text-gray-400">
+                        <i class="ph ph-check-circle text-4xl mb-2"></i>
+                        <p class="text-sm">${currentTab === 'inbox' ? 'Kotak masuk bersih.' : 'Riwayat kosong.'}</p>
+                    </div>`;
+                
+                // Hide detail if empty
+                document.getElementById('detailContent').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+
+            currentData.forEach(item => {
+                const isActive = item.id === currentActiveId;
+                const activeClass = isActive 
+                    ? 'bg-cream-100 dark:bg-darkbg-800 border-wood-300 dark:border-wood-600' 
+                    : 'bg-white dark:bg-darkbg-900 border-transparent hover:border-wood-200 dark:hover:border-wood-800 shadow-sm';
+                
+                const badgeColor = item.sheet === 'LANGGANAN' 
+                    ? 'text-wood-700 bg-wood-100 dark:bg-wood-900/30' 
+                    : 'text-blue-700 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400';
+
+                const card = document.createElement('div');
+                card.className = `inbox-card border rounded-xl p-4 cursor-pointer transition-all ${activeClass}`;
+                card.onclick = () => showDetail(item.id);
+                
+                // Menggunakan icon bawaan data, jika tidak ada, default
+                const icon = item.icon || "ph-envelope-simple";
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${badgeColor}">
+                            <i class="ph ${icon}"></i> ${item.category}
+                        </span>
+                        <span class="text-xs text-gray-400">${item.date}</span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-1 line-clamp-1">${item.title}</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">${item.summary}</p>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function showDetail(id) {
+            currentActiveId = id;
+            renderList(); // Re-render untuk efek highlight pada menu kiri
+
+            const data = currentData.find(i => i.id === id);
+            if (!data) return;
+
+            // Sembunyikan empty state dan munculkan detail
+            document.getElementById('emptyState').classList.add('hidden');
+            const detailContent = document.getElementById('detailContent');
+            
+            // Animasi Transisi
+            detailContent.classList.remove('fade-enter-active');
+            detailContent.classList.add('hidden');
+            void detailContent.offsetWidth; // Trigger reflow
+            detailContent.classList.remove('hidden');
+            detailContent.classList.add('fade-enter-active');
+
+            // Set Warna Tipe Kategori
+            const badgeColor = data.sheet === 'LANGGANAN' 
+                ? 'text-wood-700 bg-wood-100 dark:bg-wood-900/30 dark:text-wood-400' 
+                : 'text-blue-700 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400';
+
+            // Masukkan data ke DOM
+            const badgeEl = document.getElementById('detailTypeBadge');
+            badgeEl.className = `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit ${badgeColor}`;
+            badgeEl.innerHTML = `<i class="ph ${data.icon}"></i> ${data.category} (Baris ${data.row})`;
+            
+            document.getElementById('detailTitle').innerText = data.title;
+            document.getElementById('detailSender').innerText = data.author;
+            document.getElementById('detailStatus').innerText = `Status: ${data.status}`;
+            document.getElementById('detailDate').innerText = data.date;
+            
+            // Isi body (menggunakan innerHTML agar jika Google Script me-return tag <p> atau <br> bisa otomatis ter-render)
+            document.getElementById('detailBody').innerHTML = data.content;
+
+            // Update fungsi tombol Delete/Selesai sesuai dengan ID dan parameter Row/Sheet
+            if(currentTab === 'inbox') {
+                const btnSelesai = document.getElementById('btnTandaiSelesai');
+                btnSelesai.onclick = () => pindahkanKeRiwayat(data.sheet, data.row, data.id);
+            } else {
+                const btnHapus = document.getElementById('btnHapusPermanen');
+                btnHapus.onclick = () => hapusPermanen(data.row, data.id);
+            }
+        }
+
+        // --- Move to History Logic ---
+        async function pindahkanKeRiwayat(sheet, row, id) {
+            const btn = document.getElementById('btnTandaiSelesai');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin"></i> Memproses...';
+            btn.disabled = true;
+
+            try {
+                // Panggil Endpoint action=move_to_history
+                const response = await fetch(`${SCRIPT_URL}?action=move_to_history&sheet=${sheet}&row=${row}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Hapus data dari array lokal (Kotak Masuk)
+                    currentData = currentData.filter(i => i.id !== id);
+                    currentActiveId = null;
+                    
+                    document.getElementById('detailContent').classList.add('hidden');
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    
+                    renderList();
+                } else {
+                    alert('Gagal menandai selesai: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error memindahkan data:', error);
+                alert('Terjadi kesalahan jaringan/CORS saat mencoba menghubungi server.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- Delete Permanently Logic ---
+        async function hapusPermanen(row, id) {
+            if(!confirm("Yakin ingin menghapus pesan ini secara permanen dari Riwayat?")) return;
+
+            const btn = document.getElementById('btnHapusPermanen');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin"></i> Menghapus...';
+            btn.disabled = true;
+
+            try {
+                // Panggil Endpoint action=delete_history
+                const response = await fetch(`${SCRIPT_URL}?action=delete_history&row=${row}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Hapus data dari array lokal (Riwayat)
+                    currentData = currentData.filter(i => i.id !== id);
+                    currentActiveId = null;
+                    
+                    document.getElementById('detailContent').classList.add('hidden');
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    
+                    renderList();
+                } else {
+                    alert('Gagal menghapus permanen: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error menghapus data:', error);
+                alert('Terjadi kesalahan jaringan/CORS saat mencoba menghubungi server.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Jalankan fetch awal saat website dibuka
+        document.addEventListener('DOMContentLoaded', loadData);
+
+    </script>
+</body>
+</html>
